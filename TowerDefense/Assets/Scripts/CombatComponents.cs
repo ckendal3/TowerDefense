@@ -33,6 +33,11 @@ public struct FollowTarget : IComponentData
     public Entity Entity;
 }
 
+public struct FindTarget : IComponentData
+{
+    public float Range;
+}
+
 
 /// ******************** TAGS ****************************
 

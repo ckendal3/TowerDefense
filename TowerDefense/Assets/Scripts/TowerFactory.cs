@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
@@ -22,13 +20,13 @@ public static class TowerFactory
 
     }
 
-    public static void CreateTower(float3 position, quaternion rotation)
+    public static void CreateTower(int ID, float3 position, quaternion rotation)
     {
         // TODO: Create an EGO pair
         // Gameobject -> Rendering, Collision
         // Entity -> Rotation, Position, Weapons, LookAt
 
-        GameObject go = new GameObject();
+        GameObject go = Object.Instantiate(TowerParameters.Instance.GetTowerPrefab(ID));
         Entity entity = EntityManager.CreateEntity(Archetype);
 
 #if UNITY_EDITOR
