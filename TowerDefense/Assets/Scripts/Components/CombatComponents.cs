@@ -38,6 +38,10 @@ public struct FindTarget : IComponentData
     public float Range;
 }
 
+public struct SineMovement : IComponentData
+{
+    public float Value;
+}
 
 /// ******************** TAGS ****************************
 

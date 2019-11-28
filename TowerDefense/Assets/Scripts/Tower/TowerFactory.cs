@@ -1,5 +1,6 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -7,17 +8,20 @@ public static class TowerFactory
 {
     private static EntityManager EntityManager;
     private static EntityArchetype Archetype;
+    private static TowerParameters Parameters;
 
     static TowerFactory()
     {
-        EntityManager = World.Active.EntityManager;
+        Parameters = TowerParameters.Instance;
+
+        EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         //TODO: Implement EntityArechtype for towers
         Archetype = EntityManager.CreateArchetype(new ComponentType[]
             { 
-                ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadWrite<Translation>(), ComponentType.ReadWrite<Rotation>()
+                ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadWrite<Translation>(), ComponentType.ReadWrite<Rotation>(),
+                ComponentType.ReadOnly<FindTarget>()
             });
-
     }
 
     public static void CreateTower(int ID, float3 position, quaternion rotation)
@@ -26,8 +30,14 @@ public static class TowerFactory
         // Gameobject -> Rendering, Collision
         // Entity -> Rotation, Position, Weapons, LookAt
 
-        GameObject go = Object.Instantiate(TowerParameters.Instance.GetTowerPrefab(ID));
+        GameObject go = Object.Instantiate(Parameters.GetTowerPrefab(ID));
         Entity entity = EntityManager.CreateEntity(Archetype);
+
+        EntityManager.AddSharedComponentData(entity, new RenderMesh
+        {
+            mesh = go.GetComponent<MeshFilter>().sharedMesh,
+            material = go.GetComponent<MeshRenderer>().sharedMaterial
+        });
 
 #if UNITY_EDITOR
         go.name = "Tower";
@@ -39,12 +49,15 @@ public static class TowerFactory
         SetGameObjectComponents(go, position, rotation);
 
         SetHybridComponents(entity, go);
+
+        Object.Destroy(go);
     }
 
     private static void SetEntityComponents(Entity entity, float3 position, quaternion rotation)
     {
         EntityManager.SetComponentData(entity, new Translation { Value = position });
         EntityManager.SetComponentData(entity, new Rotation { Value = rotation });
+        EntityManager.SetComponentData(entity, new FindTarget { Range = 40f });
     }
 
     private static void SetGameObjectComponents(GameObject go, float3 position, quaternion rotation)

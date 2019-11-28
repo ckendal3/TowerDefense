@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 public class FindTargetSystem : JobComponentSystem
 {
@@ -26,7 +23,6 @@ public class FindTargetSystem : JobComponentSystem
         [WriteOnly] public NativeQueue<Entity>.ParallelWriter entityQueue;
         [WriteOnly] public NativeQueue<LookAtTarget>.ParallelWriter lookAtQueue;
 
-
         public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref FindTarget findTarget)
         {
             Entity targetEntity = badEntities[0];
@@ -35,7 +31,7 @@ public class FindTargetSystem : JobComponentSystem
 
             for (int i = 0; i < enemyTranslations.Length; i++)
             {
-                nextDistance = math.distance(enemyTranslations[0].Value, translation.Value);
+                nextDistance = math.distance(enemyTranslations[i].Value, translation.Value);
 
                 if (closest > nextDistance)
                 {
@@ -44,7 +40,7 @@ public class FindTargetSystem : JobComponentSystem
                 }
             }
 
-            if(closest < findTarget.Range)
+            if(closest <= findTarget.Range)
             {
                 entityQueue.Enqueue(entity);
                 lookAtQueue.Enqueue(new LookAtTarget { Entity = targetEntity });
@@ -52,26 +48,37 @@ public class FindTargetSystem : JobComponentSystem
         }
     }
 
+
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        var addQueue = new NativeQueue<Entity>();
-        var lookAtQueue = new NativeQueue<LookAtTarget>();
+        int count = Query.CalculateEntityCount();
+
+        if (count == 0 )
+        {
+            return inputDeps;
+        }
+
+        var addQueue = new NativeQueue<Entity>(Allocator.TempJob);
+        var lookAtQueue = new NativeQueue<LookAtTarget>(Allocator.TempJob);
 
         JobHandle findJob = new FindTargetJob
         {
             enemyTranslations = Query.ToComponentDataArray<Translation>(Allocator.TempJob),
             badEntities = Query.ToEntityArray(Allocator.TempJob),
             entityQueue = addQueue.AsParallelWriter(),
-            lookAtQueue = lookAtQueue.AsParallelWriter()
+            lookAtQueue = lookAtQueue.AsParallelWriter(),
         }.Schedule(this, inputDeps);
         findJob.Complete();
-        
-        while(addQueue.Count > 0)
+
+        while (addQueue.Count > 0)
         {
             EntityManager.AddComponentData(addQueue.Dequeue(), lookAtQueue.Dequeue());
         }
 
-        return findJob;
+        addQueue.Dispose();
+        lookAtQueue.Dispose();
+
+        return inputDeps;
     }
 
     protected override void OnCreate()
@@ -81,4 +88,5 @@ public class FindTargetSystem : JobComponentSystem
             All = new ComponentType[] { ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<BadFactionTag>() }
         });
     }
+
 }
