@@ -4,30 +4,39 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
-public class LookAtSystem : JobComponentSystem
+// TODO: Fix how targeting works
+public class TargetInRangeSystem : JobComponentSystem
 {
-    private EntityQuery Query;
+    public EntityQuery Query;
 
     [BurstCompile]
-    public struct LookAtJob : IJobForEach<Rotation, Translation, LookAtTarget>
+    public struct TargetInRangeJob : IJobForEach<LookAtTarget, FindTarget, Translation>
     {
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Entity> lookAtEntities;
-        
+
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Translation> lookAtPositions;
 
-        public void Execute([WriteOnly] ref Rotation rotation, [ReadOnly] ref Translation position, [ReadOnly] ref LookAtTarget lookAt)
+        public void Execute(ref LookAtTarget lookAt, [ReadOnly] ref FindTarget findTarget, [ReadOnly] ref Translation position)
         {
-            for (int i = 0; i < lookAtEntities.Length; i++)
+            if(lookAt.Entity != Entity.Null)
             {
-                if (lookAtEntities[i].Index == lookAt.Entity.Index)
+                float distance;
+                for (int i = 0; i < lookAtEntities.Length; i++)
                 {
-                    float3 diff = math.normalize(lookAtPositions[i].Value - position.Value);
 
-                    rotation = new Rotation { Value = quaternion.LookRotation(diff, math.up()) };
+                    if (lookAtEntities[i].Index == lookAt.Entity.Index)
+                    {
+                        distance = math.distance(lookAtPositions[i].Value, position.Value);
+
+                        // if not in range set no entity
+                        if (distance > findTarget.Range)
+                        {
+                            lookAt.Entity = Entity.Null;
+                        }
+                    }
                 }
             }
         }
@@ -35,20 +44,20 @@ public class LookAtSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        JobHandle lookAtHandle = new LookAtJob
+        JobHandle inRangeJob = new TargetInRangeJob
         {
             lookAtEntities = Query.ToEntityArray(Allocator.TempJob),
             lookAtPositions = Query.ToComponentDataArray<Translation>(Allocator.TempJob)
         }.Schedule(this, inputDeps);
 
-        return lookAtHandle;
+        return inRangeJob;
     }
 
     protected override void OnCreate()
     {
         Query = GetEntityQuery(new EntityQueryDesc
         {
-            All = new ComponentType[] 
+            All = new ComponentType[]
             {
                 ComponentType.ReadOnly<Entity>(), ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<TrackableTag>()
             }

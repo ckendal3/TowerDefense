@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst;
+﻿using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 public class SineMovementSystem : JobComponentSystem
 {
@@ -20,7 +17,9 @@ public class SineMovementSystem : JobComponentSystem
         {
             float3 newPos = position.Value;
 
-            newPos.y += (math.sin(time) * deltaTime) * sine.Value;
+            newPos.x += (math.sin(time) * deltaTime) * sine.X;
+            newPos.y += (math.sin(time) * deltaTime) * sine.Y;
+            newPos.z += (math.sin(time) * deltaTime) * sine.Z;
 
             position.Value = newPos;
         }
@@ -31,7 +30,7 @@ public class SineMovementSystem : JobComponentSystem
         JobHandle movementJob = new SineMovementJob
         {
             deltaTime = Time.DeltaTime,
-            time = Time.time
+            time = (float) Time.ElapsedTime
         }.Schedule(this, inputDeps);
 
         return movementJob;

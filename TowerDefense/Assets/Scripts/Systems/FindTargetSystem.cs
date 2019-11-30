@@ -9,9 +9,8 @@ public class FindTargetSystem : JobComponentSystem
 {
     private EntityQuery Query;
 
-    [ExcludeComponent(typeof(LookAtTarget))]
     [BurstCompile]
-    public struct FindTargetJob : IJobForEachWithEntity<Translation, FindTarget>
+    public struct FindTargetJob : IJobForEachWithEntity<Translation, FindTarget, LookAtTarget>
     {
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Translation> enemyTranslations;
@@ -20,30 +19,28 @@ public class FindTargetSystem : JobComponentSystem
         [ReadOnly]
         public NativeArray<Entity> badEntities;
 
-        [WriteOnly] public NativeQueue<Entity>.ParallelWriter entityQueue;
-        [WriteOnly] public NativeQueue<LookAtTarget>.ParallelWriter lookAtQueue;
-
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref FindTarget findTarget)
+        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref FindTarget findTarget, ref LookAtTarget lookAt)
         {
-            Entity targetEntity = badEntities[0];
-            float closest = math.distance(enemyTranslations[0].Value, translation.Value);
-            float nextDistance;
-
-            for (int i = 0; i < enemyTranslations.Length; i++)
+            // only find closest if don't currently have one
+            if(lookAt.Entity == Entity.Null)
             {
-                nextDistance = math.distance(enemyTranslations[i].Value, translation.Value);
+                Entity targetEntity = badEntities[0];
+                float closest = math.distance(enemyTranslations[0].Value, translation.Value);
+                float nextDistance;
 
-                if (closest > nextDistance)
+                for (int i = 0; i < enemyTranslations.Length; i++)
                 {
-                    targetEntity = badEntities[i];
-                    closest = nextDistance;
-                }
-            }
+                    nextDistance = math.distance(enemyTranslations[i].Value, translation.Value);
 
-            if(closest <= findTarget.Range)
-            {
-                entityQueue.Enqueue(entity);
-                lookAtQueue.Enqueue(new LookAtTarget { Entity = targetEntity });
+                    // if within range and it is closwer
+                    if(nextDistance <= findTarget.Range && nextDistance < closest)
+                    {
+                        targetEntity = badEntities[i];
+                        closest = nextDistance;
+
+                        lookAt.Entity = targetEntity;
+                    }
+                }              
             }
         }
     }
@@ -51,41 +48,20 @@ public class FindTargetSystem : JobComponentSystem
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
     {
-        int count = Query.CalculateEntityCount();
-
-        if (count == 0 )
-        {
-            return inputDeps;
-        }
-
-        var addQueue = new NativeQueue<Entity>(Allocator.TempJob);
-        var lookAtQueue = new NativeQueue<LookAtTarget>(Allocator.TempJob);
-
         JobHandle findJob = new FindTargetJob
         {
             enemyTranslations = Query.ToComponentDataArray<Translation>(Allocator.TempJob),
-            badEntities = Query.ToEntityArray(Allocator.TempJob),
-            entityQueue = addQueue.AsParallelWriter(),
-            lookAtQueue = lookAtQueue.AsParallelWriter(),
+            badEntities = Query.ToEntityArray(Allocator.TempJob)
         }.Schedule(this, inputDeps);
-        findJob.Complete();
 
-        while (addQueue.Count > 0)
-        {
-            EntityManager.AddComponentData(addQueue.Dequeue(), lookAtQueue.Dequeue());
-        }
-
-        addQueue.Dispose();
-        lookAtQueue.Dispose();
-
-        return inputDeps;
+        return findJob;
     }
 
     protected override void OnCreate()
     {
         Query = GetEntityQuery(new EntityQueryDesc
         {
-            All = new ComponentType[] { ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<BadFactionTag>() }
+            All = new ComponentType[] { ComponentType.ReadOnly<Translation>(), ComponentType.ReadOnly<BadFactionTag>(), ComponentType.ReadOnly<TrackableTag>() }
         });
     }
 

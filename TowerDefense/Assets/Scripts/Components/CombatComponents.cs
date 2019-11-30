@@ -33,6 +33,8 @@ public struct FollowTarget : IComponentData
     public Entity Entity;
 }
 
+public struct TrackableTag : IComponentData { }
+
 public struct FindTarget : IComponentData
 {
     public float Range;
@@ -40,7 +42,9 @@ public struct FindTarget : IComponentData
 
 public struct SineMovement : IComponentData
 {
-    public float Value;
+    public float X;
+    public float Y;
+    public float Z;
 }
 
 /// ******************** TAGS ****************************
