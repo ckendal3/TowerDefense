@@ -4,14 +4,13 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 public class LookAtSystem : JobComponentSystem
 {
     private EntityQuery Query;
 
     [BurstCompile]
-    public struct LookAtJob : IJobForEach<Rotation, Translation, LookAtTarget>
+    public struct LookAtJob : IJobForEach<Rotation, Translation, Targetting>
     {
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Entity> lookAtEntities;
@@ -19,11 +18,11 @@ public class LookAtSystem : JobComponentSystem
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Translation> lookAtPositions;
 
-        public void Execute([WriteOnly] ref Rotation rotation, [ReadOnly] ref Translation position, [ReadOnly] ref LookAtTarget lookAt)
+        public void Execute([WriteOnly] ref Rotation rotation, [ReadOnly] ref Translation position, [ReadOnly] ref Targetting targetting)
         {
             for (int i = 0; i < lookAtEntities.Length; i++)
             {
-                if (lookAtEntities[i].Index == lookAt.Entity.Index)
+                if (lookAtEntities[i].Index == targetting.Entity.Index)
                 {
                     float3 diff = math.normalize(lookAtPositions[i].Value - position.Value);
 

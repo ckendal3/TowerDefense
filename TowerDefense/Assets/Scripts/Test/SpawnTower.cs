@@ -8,5 +8,7 @@ public class SpawnTower : MonoBehaviour
     void Start()
     {
         TowerFactory.CreateTower(TowerID, transform.position, transform.rotation);
+
+        Destroy(gameObject);
     }
 }

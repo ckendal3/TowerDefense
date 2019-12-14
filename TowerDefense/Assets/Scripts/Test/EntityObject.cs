@@ -6,6 +6,9 @@ using Unity.Mathematics;
 
 public class EntityObject : MonoBehaviour
 {
+    public Transform GoToPosition;
+    public float Speed;
+
     public float3 SineMovement = new float3(1f, 4f, 0f);
 
     private EntityManager EntityManager;
@@ -21,8 +24,9 @@ public class EntityObject : MonoBehaviour
         Archetype = EntityManager.CreateArchetype(new ComponentType[] 
         {
             ComponentType.ReadWrite<LocalToWorld>(),
-            ComponentType.ReadWrite<Rotation>(), ComponentType.ReadWrite<Translation>(),
-            ComponentType.ReadWrite<BadFactionTag>(), ComponentType.ReadOnly<SineMovement>(), ComponentType.ReadOnly<TrackableTag>()
+            ComponentType.ReadWrite<Rotation>(), ComponentType.ReadWrite<Translation>(), //ComponentType.ReadOnly<SineMovement>(),
+            ComponentType.ReadWrite<BadFactionTag>(), ComponentType.ReadOnly<TrackableTag>(),
+            ComponentType.ReadOnly<Health>()
         });
     }
 
@@ -34,7 +38,15 @@ public class EntityObject : MonoBehaviour
         EntityManager.AddSharedComponentData(entity, new RenderMesh { mesh = GetComponent<MeshFilter>().sharedMesh, material = GetComponent<MeshRenderer>().sharedMaterial });
         EntityManager.SetComponentData(entity, new Translation { Value = transform.position });
         EntityManager.SetComponentData(entity, new Rotation { Value = transform.rotation });
-        EntityManager.SetComponentData(entity, new SineMovement { X = SineMovement.x, Y = SineMovement.y, Z = SineMovement.z });
+        EntityManager.SetComponentData(entity, new Health { Value = 100, MaxValue = 100f });
+        //EntityManager.SetComponentData(entity, new SineMovement { X = SineMovement.x, Y = SineMovement.y, Z = SineMovement.z });
+
+        if (GoToPosition != null)
+        {
+            EntityManager.AddComponentData(entity, new GoToPosition { Value = GoToPosition.position });
+            EntityManager.AddComponentData(entity, new Speed { Value = Speed });
+        }
+
 
         Destroy(this.gameObject);
     }

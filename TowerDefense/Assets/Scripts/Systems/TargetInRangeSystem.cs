@@ -11,7 +11,7 @@ public class TargetInRangeSystem : JobComponentSystem
     public EntityQuery Query;
 
     [BurstCompile]
-    public struct TargetInRangeJob : IJobForEach<LookAtTarget, FindTarget, Translation>
+    public struct TargetInRangeJob : IJobForEach<Targetting, Translation>
     {
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Entity> lookAtEntities;
@@ -19,22 +19,22 @@ public class TargetInRangeSystem : JobComponentSystem
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Translation> lookAtPositions;
 
-        public void Execute(ref LookAtTarget lookAt, [ReadOnly] ref FindTarget findTarget, [ReadOnly] ref Translation position)
+        public void Execute(ref Targetting targetting, [ReadOnly] ref Translation position)
         {
-            if(lookAt.Entity != Entity.Null)
+            if(targetting.Entity != Entity.Null)
             {
                 float distance;
                 for (int i = 0; i < lookAtEntities.Length; i++)
                 {
 
-                    if (lookAtEntities[i].Index == lookAt.Entity.Index)
+                    if (lookAtEntities[i].Index == targetting.Entity.Index)
                     {
                         distance = math.distance(lookAtPositions[i].Value, position.Value);
 
                         // if not in range set no entity
-                        if (distance > findTarget.Range)
+                        if (distance > targetting.Range)
                         {
-                            lookAt.Entity = Entity.Null;
+                            targetting.Entity = Entity.Null;
                         }
                     }
                 }

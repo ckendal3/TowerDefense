@@ -10,7 +10,7 @@ public class FindTargetSystem : JobComponentSystem
     private EntityQuery Query;
 
     [BurstCompile]
-    public struct FindTargetJob : IJobForEachWithEntity<Translation, FindTarget, LookAtTarget>
+    public struct FindTargetJob : IJobForEachWithEntity<Translation, Targetting>
     {
         [DeallocateOnJobCompletion]
         [ReadOnly] public NativeArray<Translation> enemyTranslations;
@@ -19,10 +19,10 @@ public class FindTargetSystem : JobComponentSystem
         [ReadOnly]
         public NativeArray<Entity> badEntities;
 
-        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, [ReadOnly] ref FindTarget findTarget, ref LookAtTarget lookAt)
+        public void Execute(Entity entity, int index, [ReadOnly] ref Translation translation, ref Targetting targetting)
         {
             // only find closest if don't currently have one
-            if(lookAt.Entity == Entity.Null)
+            if(targetting.Entity == Entity.Null)
             {
                 Entity targetEntity = badEntities[0];
                 float closest = math.distance(enemyTranslations[0].Value, translation.Value);
@@ -33,12 +33,15 @@ public class FindTargetSystem : JobComponentSystem
                     nextDistance = math.distance(enemyTranslations[i].Value, translation.Value);
 
                     // if within range and it is closwer
-                    if(nextDistance <= findTarget.Range && nextDistance < closest)
+                    if(nextDistance < closest)
                     {
                         targetEntity = badEntities[i];
-                        closest = nextDistance;
+                        closest = nextDistance;                       
+                    }
 
-                        lookAt.Entity = targetEntity;
+                    if(closest <= targetting.Range)
+                    {
+                        targetting.Entity = targetEntity;
                     }
                 }              
             }

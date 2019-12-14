@@ -20,7 +20,7 @@ public static class TowerFactory
         Archetype = EntityManager.CreateArchetype(new ComponentType[]
             { 
                 ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadWrite<Translation>(), ComponentType.ReadWrite<Rotation>(),
-                ComponentType.ReadOnly<FindTarget>(), ComponentType.ReadWrite<LookAtTarget>()
+                ComponentType.ReadWrite<Targetting>()
             });
     }
 
@@ -57,8 +57,7 @@ public static class TowerFactory
     {
         EntityManager.SetComponentData(entity, new Translation { Value = position });
         EntityManager.SetComponentData(entity, new Rotation { Value = rotation });
-        EntityManager.SetComponentData(entity, new FindTarget { Range = 40f });
-        EntityManager.SetComponentData(entity, new LookAtTarget { Entity = Entity.Null });
+        EntityManager.SetComponentData(entity, new Targetting { Entity = Entity.Null, Range = 20f, Type = TrackingType.LookAt });
     }
 
     private static void SetGameObjectComponents(GameObject go, float3 position, quaternion rotation)
