@@ -37,7 +37,7 @@ public class EntityObject : MonoBehaviour
 
         EntityManager.AddSharedComponentData(entity, new RenderMesh { mesh = GetComponent<MeshFilter>().sharedMesh, material = GetComponent<MeshRenderer>().sharedMaterial });
         EntityManager.SetComponentData(entity, new Translation { Value = transform.position });
-        EntityManager.SetComponentData(entity, new Rotation { Value = transform.rotation });
+        EntityManager.SetComponentData(entity, new Rotation { Value = quaternion.LookRotation((GoToPosition.position - transform.position), math.up()) });
         EntityManager.SetComponentData(entity, new Health { Value = 100, MaxValue = 100f });
         //EntityManager.SetComponentData(entity, new SineMovement { X = SineMovement.x, Y = SineMovement.y, Z = SineMovement.z });
 

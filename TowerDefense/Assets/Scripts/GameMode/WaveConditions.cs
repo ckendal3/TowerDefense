@@ -1,16 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class WaveConditions : IGameConditions
+﻿public class WaveConditions : IGameConditions
 {
     private WaveData data;
     private float timeElapsed;
 
-    public void Initialize()
+    public void Initialize(WaveData waveData)
     {
-        // TODO: Set time for interval
-        // timeElapsed = data.Interval;
+        data = waveData;
+
+        timeElapsed = data.Interval;
     }
 
     public void Update()
@@ -19,8 +16,7 @@ public class WaveConditions : IGameConditions
         {
             // TODO: Spawn Enemies based on wavedata
 
-            // TODO: Set time for interval
-            // timeElapsed = data.Interval;
+            timeElapsed = data.Interval;
         }
     }
 

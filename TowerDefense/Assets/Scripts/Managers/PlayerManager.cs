@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
+using WDIB.Components;
+using WDIB.Inputs;
 
 public class PlayerManager
 {
@@ -69,11 +71,11 @@ public class PlayerManager
 
         if(EntityManager.HasComponent<OwnerID>(entity))
         {
-            EntityManager.SetComponentData(entity, new OwnerID { Value = ID });
+            EntityManager.SetComponentData(entity, new OwnerID { Value = (uint)ID });
         }
         else
         {
-            EntityManager.AddComponentData(entity, new OwnerID { Value = ID });
+            EntityManager.AddComponentData(entity, new OwnerID { Value = (uint)ID });
         }
 
         return true;
@@ -98,14 +100,4 @@ public class Player
     public int ID;
 
     public InputState inputState;
-}
-
-public struct InputState : IComponentData 
-{
-
-}
-
-public struct OwnerID : IComponentData
-{
-    public int Value;
 }

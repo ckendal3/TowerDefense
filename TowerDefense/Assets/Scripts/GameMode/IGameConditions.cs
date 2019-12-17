@@ -5,7 +5,7 @@ using UnityEngine;
 public interface IGameConditions
 {
     void Update();
-    void Initialize();
+    void Initialize(WaveData waveData);
     bool StartRound();
     void StartGame();
     bool EndRound();
