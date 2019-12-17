@@ -20,7 +20,7 @@ public static class TowerFactory
         Archetype = EntityManager.CreateArchetype(new ComponentType[]
             { 
                 ComponentType.ReadWrite<LocalToWorld>(), ComponentType.ReadWrite<Translation>(), ComponentType.ReadWrite<Rotation>(),
-                ComponentType.ReadWrite<Targetting>()
+                ComponentType.ReadWrite<Targetting>(), ComponentType.ReadOnly<TowerTag>()
             });
     }
 

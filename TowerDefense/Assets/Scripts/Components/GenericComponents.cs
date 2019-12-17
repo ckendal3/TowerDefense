@@ -16,3 +16,11 @@ public struct Health : IComponentData
     public float Value;
     public float MaxValue;
 }
+
+public struct InputState : IComponentData
+{
+    public float3 MousePosition;
+    
+    public bool PrimaryAction;
+    public bool SecondaryAction;
+}

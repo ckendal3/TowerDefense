@@ -2,4 +2,4 @@
 
 public struct CreatorTag : IComponentData { }
 
-public struct TurretTag : IComponentData { }
+public struct TowerTag : IComponentData { }
